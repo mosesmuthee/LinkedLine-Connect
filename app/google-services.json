@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978207197323",
+    "project_id": "linkedline-connect",
+    "storage_bucket": "linkedline-connect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978207197323:android:e59bfa3ae09c319d1cac8e",
+        "android_client_info": {
+          "package_name": "com.moses.linkedlineconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpJ-SEJHxfPEWYwAGubdDj8b9zpzORL9o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
