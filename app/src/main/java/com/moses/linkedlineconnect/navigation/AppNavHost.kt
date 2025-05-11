@@ -1,2 +1,185 @@
 package com.moses.linkedlineconnect.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.moses.linkedlineconnect.data.AuthViewModel
+import com.moses.linkedlineconnect.ui.theme.BusPickupScreen.BusPickupDialog
+import com.moses.linkedlineconnect.ui.theme.EscortDashboard.EscortDashboardScreen
+import com.moses.linkedlineconnect.ui.theme.EscortRegPage.EscortRegScreen
+import com.moses.linkedlineconnect.ui.theme.Escorts.EscortLoginPage.EscortLoginScreen
+import com.moses.linkedlineconnect.ui.theme.PaymentConfirmationScreen.PayConfirmDialog
+import com.moses.linkedlineconnect.ui.theme.PaymentScreen.MpesaPaymentScreen
+import com.moses.linkedlineconnect.ui.theme.Registration.UnifiedRegistrationScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.BookingPage.BookingPageScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.ChatPageScreen.ChatPageScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.DashBoardScreen.DashBoardScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.LoginScreen.LoginScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.ParentProfile.ParentProfileScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.StudentDetailsPage.StudentDetailsPageScreen
+import com.moses.linkedlineconnect.viewmodel.AppViewModel
+
+
+//import com.moses.linkedlineconnect.ui.theme.Welcoming.WelcomePage.WelcomePageScreenPreview
+
+
+
+
+@RequiresApi(Build.VERSION_CODES.R)
+@Composable
+fun AppNavHost(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = ROUTE_WELCOMEPAGE,
+    viewModel: AppViewModel = viewModel(),
+    authViewModel: AuthViewModel = AuthViewModel(navController, LocalContext.current.applicationContext) // Proper ViewModel instantiation
+) {
+    val context = LocalContext.current // Use LocalContext correctly
+    val students = viewModel.students.collectAsState(initial = emptyList())
+    val schools = viewModel.schools.collectAsState(initial = emptyList())
+    val routes = viewModel.routes.collectAsState(initial = emptyList())
+
+    NavHost(
+        navController = navController,
+        modifier = modifier,
+        startDestination = startDestination
+    ) {
+        composable(ROUTE_WELCOMEPAGE) {
+            UnifiedRegistrationScreen(
+                navController = navController,
+                viewModel = viewModel, // Pass the viewModel here
+               authviewModel = authViewModel,
+                onRegister = { email, formData, imageUri ->
+                    authViewModel.signup(
+                        firstname = formData["firstname"] ?: "",
+                        lastname = formData["lastname"] ?: "",
+                        email = email,
+                        idNumber = formData["idNumber"] ?: "",
+                        phoneNumber = formData["phoneNumber"] ?: "",
+                        password = formData["password"] ?: "",
+                        confirmPassword = formData["confirmPassword"] ?: "",
+                        role = formData["role"] ?: "Parent"
+                    )
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(ROUTE_BOOKINGPAGE) {
+            BookingPageScreen(
+                navController = navController,
+                students = students.value,
+                schools = schools.value,
+                routes = routes.value,
+                onContinueToPayment = TODO(),
+            )
+        }
+//                onContinueToPayment = {TODO()} as (String, String, String, String, String) -> Unit
+//            )
+        
+        composable (ROUTE_CHATPAGE){
+            ChatPageScreen()
+        }
+        composable (ROUTE_ADMINASSIGNBUS){
+            Text("Coming Soon, please bear with us")
+        }
+        composable (ROUTE_STUDENTDETAILS){
+            StudentDetailsPageScreen(
+                onDownloadDetails = {}
+            )
+        }
+        composable (ROUTE_SCHOOLROUTEREGISTER){
+            Text("Coming Soon")
+        }
+        composable (ROUTE_REGISTEREDSTUDENTS){
+            Text("Coming Soon")
+
+        }
+        composable (ROUTE_PAYMENTSCREEN){
+            MpesaPaymentScreen(
+                studentId = "studentId", // Replace with actual student ID
+                onPay = { paymentDetails ->
+                    // Handle payment logic here
+                }
+            )
+        }
+        composable(ROUTE_PARENTPROFILE) {
+            ParentProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = { authViewModel.logout() },
+                onNavigateToDashboard = { navController.navigate(ROUTE_DASHBOARDParent) },
+                onNavigateToBusPickup = { navController.navigate(ROUTE_BUSPICKUP) },
+                onNavigateToChatPage = { navController.navigate(ROUTE_CHATPAGE) },
+                onNavigateToPaymentConfirmation = { navController.navigate(ROUTE_PAYMENTCONFIRMATION) },
+                onNavigateToPayment = { navController.navigate(ROUTE_PAYMENTSCREEN) },
+                onNavigateToTrackBus = { /* Add track bus logic */ }
+            )
+        }
+        composable (ROUTE_PAYMENTCONFIRMATION){
+            PayConfirmDialog(
+                transactionId = "transactionId", // Replace with actual transaction ID
+                onDismiss = { /* Handle dismiss */ }
+            )
+        }
+        composable (ROUTE_ESCORTLOGIN){
+            EscortLoginScreen(
+                navController = navController,
+                onLogin = { email, password ->
+                    // Handle login logic here
+                },
+                onNavigateToWelcome = {
+                    // Handle navigation to the welcoming page
+                }
+            )
+        }
+        composable (ROUTE_LOGINParent){
+            LoginScreen(
+                navController = navController,
+                onNavigateToSignUp = {navController.navigate(ROUTE_REGISTERParent) },
+                onForgotPassword = { /* Handle forgot password */ }
+            )
+        }
+        composable (ROUTE_ESCORTREGISTER){
+            EscortRegScreen(
+                onRegister = { escort ->
+                    // Handle registration logic here
+                },
+                onNavigateBack = { /* Handle navigation back */ }
+            )
+        }
+
+        composable(ROUTE_DASHBOARDParent) {
+            DashBoardScreen(
+                navController = navController,
+                authViewModel = authViewModel // Pass authViewModel
+            )
+        }
+        composable (ROUTE_BUSPICKUP){
+            BusPickupDialog(
+                studentId = "studentId", // Replace with actual student ID
+                parentId = "parentId", // Replace with actual parent ID
+                onDismiss = { /* Handle dismiss */ },
+                onUpdateStatus = { isPickedUp, isDroppedOff ->
+                    // Handle update status logic here
+                }
+            )
+        }
+        composable (ROUTE_DASHBOARDEscort){
+            EscortDashboardScreen(
+                onNavigateToChat = { /* Handle navigation to chat */ },
+                onSendNotification = { /* Handle send notification */ }
+            )
+        }
+
+        }
+
+    }

@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -38,6 +40,7 @@ android {
     buildFeatures {
         compose = true
     }
+    buildToolsVersion = "35.0.0"
 }
 
 dependencies {
@@ -48,6 +51,14 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation(libs.coil.compose)
+    implementation (libs.firebase.auth.ktx)
+
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
@@ -55,14 +66,25 @@ dependencies {
     implementation (libs.androidx.appcompat)
     implementation (libs.material)
     implementation (libs.androidx.material.icons.extended)
+    implementation (libs.androidx.biometric)
+    implementation (libs.play.services.maps.v1810)
+    implementation (libs.maps.compose)
+    implementation (libs.firebase.auth)
 
     implementation (libs.androidx.constraintlayout)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.material3)
-
+    implementation (libs.play.services.maps)
+    implementation (libs.maps.compose)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    implementation (libs.play.services.maps)
+    implementation (libs.androidx.core)
+        // Other dependencies like appcompat, material, etc.
+    implementation (libs.androidx.appcompat.v161)
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -72,3 +94,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+"com.google.gms.google-services"

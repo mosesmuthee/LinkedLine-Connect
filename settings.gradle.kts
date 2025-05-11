@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "LinkedLine Connect"
 include(":app")
- 
