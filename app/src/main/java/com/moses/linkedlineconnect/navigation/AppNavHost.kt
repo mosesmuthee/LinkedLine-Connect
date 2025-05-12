@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.moses.linkedlineconnect.data.AuthViewModel
+import com.moses.linkedlineconnect.ui.theme.AdminScreens.AdminDashboard.AdminDashboardScreen
 import com.moses.linkedlineconnect.ui.theme.BusPickupScreen.BusPickupDialog
 import com.moses.linkedlineconnect.ui.theme.EscortDashboard.EscortDashboardScreen
 import com.moses.linkedlineconnect.ui.theme.EscortRegPage.EscortRegScreen
@@ -26,6 +27,7 @@ import com.moses.linkedlineconnect.ui.theme.UsersParents.DashBoardScreen.DashBoa
 import com.moses.linkedlineconnect.ui.theme.UsersParents.LoginScreen.LoginScreen
 import com.moses.linkedlineconnect.ui.theme.UsersParents.ParentProfile.ParentProfileScreen
 import com.moses.linkedlineconnect.ui.theme.UsersParents.StudentDetailsPage.StudentDetailsPageScreen
+import com.moses.linkedlineconnect.ui.theme.Welcoming.SplashScreen.SplashScreen
 import com.moses.linkedlineconnect.viewmodel.AppViewModel
 
 
@@ -39,7 +41,7 @@ import com.moses.linkedlineconnect.viewmodel.AppViewModel
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = ROUTE_WELCOMEPAGE,
+    startDestination: String = ROUTE_SPLASHSCREEN,
     viewModel: AppViewModel = viewModel(),
     authViewModel: AuthViewModel = AuthViewModel(navController, LocalContext.current.applicationContext) // Proper ViewModel instantiation
 ) {
@@ -67,24 +69,25 @@ fun AppNavHost(
                         phoneNumber = formData["phoneNumber"] ?: "",
                         password = formData["password"] ?: "",
                         confirmPassword = formData["confirmPassword"] ?: "",
-                        role = formData["role"] ?: "Parent"
+                        role = formData["role"] ?: "Parent",
+                        age = formData["age"] ?: "",
                     )
                 },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-
+composable(ROUTE_SPLASHSCREEN){
+    SplashScreen(navController = navController)
+}
         composable(ROUTE_BOOKINGPAGE) {
             BookingPageScreen(
-                navController = navController,
-                students = students.value,
-                schools = schools.value,
-                routes = routes.value,
-                onContinueToPayment = TODO(),
+                navController = TODO(),
+                students = TODO(),
+                schools = TODO(),
+                routes = TODO(),
+                onContinueToPayment = TODO()
             )
         }
-//                onContinueToPayment = {TODO()} as (String, String, String, String, String) -> Unit
-//            )
         
         composable (ROUTE_CHATPAGE){
             ChatPageScreen()
@@ -114,14 +117,16 @@ fun AppNavHost(
         }
         composable(ROUTE_PARENTPROFILE) {
             ParentProfileScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onLogout = { authViewModel.logout() },
-                onNavigateToDashboard = { navController.navigate(ROUTE_DASHBOARDParent) },
-                onNavigateToBusPickup = { navController.navigate(ROUTE_BUSPICKUP) },
-                onNavigateToChatPage = { navController.navigate(ROUTE_CHATPAGE) },
-                onNavigateToPaymentConfirmation = { navController.navigate(ROUTE_PAYMENTCONFIRMATION) },
-                onNavigateToPayment = { navController.navigate(ROUTE_PAYMENTSCREEN) },
-                onNavigateToTrackBus = { /* Add track bus logic */ }
+                navController = navController,
+//                parentId = String()
+//                onNavigateBack = { navController.popBackStack() },
+//                onLogout = { authViewModel.logout() },
+//                onNavigateToDashboard = { navController.navigate(ROUTE_DASHBOARDParent) },
+//                onNavigateToBusPickup = { navController.navigate(ROUTE_BUSPICKUP) },
+//                onNavigateToChatPage = { navController.navigate(ROUTE_CHATPAGE) },
+//                onNavigateToPaymentConfirmation = { navController.navigate(ROUTE_PAYMENTCONFIRMATION) },
+//                onNavigateToPayment = { navController.navigate(ROUTE_PAYMENTSCREEN) },
+//                parentId = TODO()
             )
         }
         composable (ROUTE_PAYMENTCONFIRMATION){
@@ -176,10 +181,13 @@ fun AppNavHost(
         composable (ROUTE_DASHBOARDEscort){
             EscortDashboardScreen(
                 onNavigateToChat = { /* Handle navigation to chat */ },
-                onSendNotification = { /* Handle send notification */ }
+                onSendNotification = { /* Handle send notification */ },
+                navController = TODO()
             )
         }
-
+        composable(ROUTE_ADMIN_DASHBOARD) {
+              AdminDashboardScreen()
+        }
         }
 
     }

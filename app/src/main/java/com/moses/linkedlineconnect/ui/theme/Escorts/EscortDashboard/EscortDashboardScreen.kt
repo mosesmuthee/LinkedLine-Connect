@@ -12,7 +12,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
+import com.moses.linkedlineconnect.navigation.ROUTE_CHATPAGE
 
 data class AssignedRoute(
     val routeName: String,
@@ -21,6 +23,7 @@ data class AssignedRoute(
 
 @Composable
 fun EscortDashboardScreen(
+    navController: NavController,
     onNavigateToChat: () -> Unit,
     onSendNotification: (String) -> Unit
 ) {
@@ -84,13 +87,12 @@ fun EscortDashboardScreen(
 
                 // Chat Button
                 Button(
-                    onClick = onNavigateToChat,
+                    onClick = { navController.navigate(ROUTE_CHATPAGE) }, // Replace "chat_screen" with the actual route name for ChatPageScreen
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4))
                 ) {
                     Text("Open Chat with Parents", fontSize = 16.sp, color = Color.White)
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Notify Buttons
@@ -150,16 +152,16 @@ fun RouteCard(route: AssignedRoute) {
     }
 }
 
-@Preview
-@Composable
-fun EscortDashboardScreenPreview() {
-    val sampleRoutes = listOf(
-        AssignedRoute(routeName = "Route 1", schoolName = "ABC High School"),
-        AssignedRoute(routeName = "Route 2", schoolName = "XYZ Academy")
-    )
-    EscortDashboardScreen(
-        onNavigateToChat = {},
-        onSendNotification = {}
-    )
-}
+//@Preview
+//@Composable
+//fun EscortDashboardScreenPreview() {
+//    val sampleRoutes = listOf(
+//        AssignedRoute(routeName = "Route 1", schoolName = "ABC High School"),
+//        AssignedRoute(routeName = "Route 2", schoolName = "XYZ Academy")
+//    )
+//    EscortDashboardScreen(
+//        onNavigateToChat = {},
+//        onSendNotification = {}
+//    )
+//}
 

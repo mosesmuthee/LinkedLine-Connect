@@ -32,71 +32,97 @@ class AuthViewModel(
         firstname: String,
         lastname: String,
         email: String,
-        idNumber: String,
-        phoneNumber: String,
+        idNumber: String?,
+        phoneNumber: String?,
+        age: String?,
         password: String,
         confirmPassword: String,
         role: String,
     ) {
-        Handler(Looper.getMainLooper()).post {
-//            progress.show()
-        }
+        Handler(Looper.getMainLooper()).post {}
 
-        if (firstname.isBlank() ||
-            lastname.isBlank() ||
-            idNumber.isBlank() ||
-            phoneNumber.isBlank() ||
-            email.isBlank() ||
-            password.isBlank() ||
-            confirmPassword.isBlank()
-        ) {
-            Handler(Looper.getMainLooper()).post {
-//                progress.dismiss()
-                Toast.makeText(context, "Credentials cannot be blank", Toast.LENGTH_LONG).show()
-            }
-            return
-        }
-
+        // Password check first (applies to all)
         if (password != confirmPassword) {
             Handler(Looper.getMainLooper()).post {
-//                progress.dismiss()
                 Toast.makeText(context, "Passwords do not match", Toast.LENGTH_LONG).show()
             }
             return
         }
 
-        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-            Handler(Looper.getMainLooper()).post {
-//                progress.dismiss()
+        // Role-specific validation
+        when (role.lowercase()) {
+            "parent" -> {
+                if (firstname.isBlank() ||
+                    lastname.isBlank() ||
+                    phoneNumber.isNullOrBlank() ||
+                    email.isBlank() ||
+                    password.isBlank() ||
+                    confirmPassword.isBlank()) {
+                    Toast.makeText(context, "Please fill all parent fields", Toast.LENGTH_LONG).show()
+                    return
+                }
             }
+
+            "escort" -> {
+                if (firstname.isBlank() ||
+                    lastname.isBlank() ||
+                    idNumber.isNullOrBlank() ||
+                    email.isBlank() ||
+                    phoneNumber.isNullOrBlank() ||
+                    age?.isBlank() == true ||
+                    password.isBlank() ||
+                    confirmPassword.isBlank()
+                ) {
+                    Toast.makeText(context, "Please fill all escort fields", Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+
+            "admin" -> {
+                if (email.isBlank() ||
+                    password.isBlank()) {
+                    Toast.makeText(context, "Please provide admin email", Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+
+            else -> {
+                Toast.makeText(context, "Unknown role: $role", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+
+        // If valid, proceed to create user
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+            Handler(Looper.getMainLooper()).post {}
 
             if (task.isSuccessful) {
                 val userId = mAuth.currentUser!!.uid
-                val userData = mapOf(
+                val userData = mutableMapOf<String, Any>(
+                    "firstname" to firstname,
+                    "lastname" to lastname,
                     "email" to email,
                     "role" to role
                 )
+
+                // Add optional fields based on role
+                if (!idNumber.isNullOrBlank()) userData["idNumber"] = idNumber
+                if (!phoneNumber.isNullOrBlank()) userData["phoneNumber"] = phoneNumber
 
                 val regRef = FirebaseDatabase.getInstance().getReference("Users/$userId")
                 regRef.setValue(userData).addOnCompleteListener { dbTask ->
                     Handler(Looper.getMainLooper()).post {
                         if (dbTask.isSuccessful) {
-                            Toast.makeText(context, "Registered Successfully", Toast.LENGTH_LONG)
-                                .show()
-                            navController.navigate(ROUTE_DASHBOARDParent)
+                            Toast.makeText(context, "Registered Successfully", Toast.LENGTH_LONG).show()
+                            navigateToDashboard(role)
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Error: ${dbTask.exception?.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast.makeText(context, "Error: ${dbTask.exception?.message}", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
             } else {
                 Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG)
-                        .show()
+                    Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -104,39 +130,49 @@ class AuthViewModel(
 
     // Login function
     fun login(email: String, password: String) {
-//        progress.show()
-
         if (email.isBlank() || password.isBlank()) {
-            Handler(Looper.getMainLooper()).post {
-//                progress.dismiss()
-                Toast.makeText(context, "Email and password cannot be blank", Toast.LENGTH_LONG)
-                    .show()
-            }
+            Toast.makeText(context, "Email and password cannot be blank", Toast.LENGTH_LONG).show()
             return
         }
 
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-            Handler(Looper.getMainLooper()).post {
-//                progress.dismiss()
-            }
-
             if (task.isSuccessful) {
                 val userId = mAuth.currentUser!!.uid
 
                 val userRef = FirebaseDatabase.getInstance().getReference("Users/$userId")
                 userRef.get().addOnSuccessListener { dataSnapshot ->
                     if (dataSnapshot.exists()) {
-                        val role = dataSnapshot.child("role").value.toString()
-                        navigateToDashboard(role)
+                        val role = dataSnapshot.child("role").value?.toString()?.lowercase()
+
+                        when (role) {
+                            "parent" -> {
+                                Toast.makeText(context, "Welcome, Parent 👨‍👩‍👧", Toast.LENGTH_SHORT).show()
+                                navController.navigate(ROUTE_DASHBOARDParent)
+                            }
+
+                            "escort" -> {
+                                Toast.makeText(context, "Welcome, Escort 🚗", Toast.LENGTH_SHORT).show()
+                                navController.navigate(ROUTE_DASHBOARDEscort)
+                            }
+
+                            "admin" -> {
+                                Toast.makeText(context, "Welcome, Admin 🛠️", Toast.LENGTH_SHORT).show()
+                                navController.navigate(ROUTE_ADMIN_DASHBOARD)
+                            }
+
+                            else -> {
+                                Toast.makeText(context, "Unknown role: $role", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     } else {
-                        Toast.makeText(context, "User data not found", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "User data not found in database", Toast.LENGTH_LONG).show()
                     }
                 }.addOnFailureListener { exception ->
-                    Toast.makeText(context, "Error: ${exception.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Database error: ${exception.message}", Toast.LENGTH_LONG).show()
                 }
+
             } else {
-                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG)
-                    .show()
+                Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

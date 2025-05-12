@@ -23,41 +23,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.google.firebase.firestore.FirebaseFirestore
 import com.moses.linkedlineconnect.R
+import com.moses.linkedlineconnect.navigation.ROUTE_DASHBOARDParent
 import kotlinx.coroutines.launch
 
-data class StudentProfile(
-    var imageRes: Int,
-    var firstName: String,
-    var lastName: String,
-    var form: String,
-    var school: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParentProfileScreen(
-    onNavigateBack: () -> Unit,
-    onLogout: () -> Unit,
-    onNavigateToDashboard: () -> Unit,
-    onNavigateToBusPickup: () -> Unit,
-    onNavigateToChatPage: () -> Unit,
-    onNavigateToPaymentConfirmation: () -> Unit,
-    onNavigateToPayment: () -> Unit,
-    onNavigateToTrackBus: () -> Unit
+    navController:NavController,
+//    parentId: String, // Pass the parent ID to fetch data
+//    onNavigateBack: () -> Unit,
+//    onLogout: () -> Unit,
+//    onNavigateToDashboard: () -> Unit,
+//    onNavigateToBusPickup: () -> Unit,
+//    onNavigateToChatPage: () -> Unit,
+//    onNavigateToPaymentConfirmation: () -> Unit,
+//    onNavigateToPayment: () -> Unit,
+//    onNavigateToTrackBus: () -> Unit
 ) {
-    var parentProfilePicture by remember { mutableStateOf(R.drawable.moses) }
-    var students by remember {
-        mutableStateOf(
-            listOf(
-                StudentProfile(R.drawable.moses, "Alice", "Brown", "Form 1", "ABC High School"),
-                StudentProfile(R.drawable.moses, "Bob", "Smith", "Form 2", "ABC High School")
-            )
-        )
-    }
+    val db = FirebaseFirestore.getInstance()
+    var parentId = String()
+    var parentData by remember { mutableStateOf<ParentData?>(null) }
+    var studentsData by remember { mutableStateOf<List<StudentProfile>>(emptyList()) }
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+
+    // Fetch parent and student data from the database
+    LaunchedEffect(parentId) {
+        db.collection("parents").document(parentId).get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                parentData = document.toObject(ParentData::class.java)
+            }
+        }
+        db.collection("students").whereEqualTo("parentId", parentId).get().addOnSuccessListener { querySnapshot ->
+            studentsData = querySnapshot.documents.mapNotNull { it.toObject(StudentProfile::class.java) }
+        }
+    }
 
     ModalNavigationDrawer(
         drawerContent = {
@@ -75,12 +80,14 @@ fun ParentProfileScreen(
                         color = Color(0xFF6200EE)
                     )
                     HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
-                    Text("Home Dashboard", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToDashboard() })
-                    Text("Bus Pickup Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToBusPickup() })
-                    Text("Chat Page Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToChatPage() })
-                    Text("Payment Confirmation Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToPaymentConfirmation() })
-                    Text("Payment Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToPayment() })
-                    Text("Track Bus Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToTrackBus() })
+                    Text("Home Dashboard", fontSize = 16.sp, modifier = Modifier.clickable { navController.navigate(
+                        ROUTE_DASHBOARDParent
+                    ) })
+//                    Text("Bus Pickup Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToBusPickup() })
+//                    Text("Chat Page Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToChatPage() })
+//                    Text("Payment Confirmation Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToPaymentConfirmation() })
+//                    Text("Payment Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToPayment() })
+//                    Text("Track Bus Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToTrackBus() })
                 }
             }
         },
@@ -109,7 +116,7 @@ fun ParentProfileScreen(
                             color = Color.White,
                             modifier = Modifier
                                 .padding(end = 16.dp)
-                                .clickable { onLogout() }
+//                                .clickable { onLogout() }
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -119,39 +126,6 @@ fun ParentProfileScreen(
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            floatingActionButton = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.padding(end = 16.dp, bottom = 16.dp)
-                ) {
-                    // Floating Button for Parent Details
-                    FloatingActionButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Parent details saved successfully!")
-                            }
-                        },
-                        containerColor = Color(0xFF6200EE),
-                        contentColor = Color.White
-                    ) {
-                        Icon(Icons.Filled.Save, contentDescription = "Save Parent Details")
-                    }
-
-                    // Floating Button for Student Details
-                    FloatingActionButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Student details saved successfully!")
-                            }
-                        },
-                        containerColor = Color(0xFF03A9F4),
-                        contentColor = Color.White
-                    ) {
-                        Icon(Icons.Filled.Save, contentDescription = "Save Student Details")
-                    }
-                }
-            },
             content = { paddingValues ->
                 Box(
                     modifier = Modifier
@@ -172,36 +146,24 @@ fun ParentProfileScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF6200EE)
                         )
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .clickable {
-                                        parentProfilePicture = R.drawable.moses // TODO: replace with image picker
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar("Parent profile picture updated successfully!")
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
+                        parentData?.let { parent ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(id = parentProfilePicture),
-                                    contentDescription = "Parent Profile Picture",
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                EditableField("First Name", "John") {}
-                                EditableField("Last Name", "Doe") {}
-                                EditableField("Phone Number", "+123456789") {}
-                                EditableField("Email", "john.doe@example.com") {}
+                                EditableField("First Name", parent.firstName) { newValue ->
+                                    parentData = parent.copy(firstName = newValue)
+                                }
+                                EditableField("Last Name", parent.lastName) { newValue ->
+                                    parentData = parent.copy(lastName = newValue)
+                                }
+                                EditableField("Phone Number", parent.phoneNumber) { newValue ->
+                                    parentData = parent.copy(phoneNumber = newValue)
+                                }
+                                EditableField("Email", parent.email) { newValue ->
+                                    parentData = parent.copy(email = newValue)
+                                }
                             }
                         }
 
@@ -212,40 +174,16 @@ fun ParentProfileScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF6200EE)
                         )
-                        students.forEachIndexed { index, student ->
+                        studentsData.forEach { student ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clickable {
-                                            val updatedList = students.toMutableList()
-                                            updatedList[index] = updatedList[index].copy(imageRes = R.drawable.moses)
-                                            students = updatedList
-                                            coroutineScope.launch {
-                                                snackbarHostState.showSnackbar("Student ${student.firstName}'s profile picture updated successfully!")
-                                            }
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = student.imageRes),
-                                        contentDescription = "Student ${student.firstName} Profile Picture",
-                                        modifier = Modifier
-                                            .size(100.dp)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    EditableField("First Name", student.firstName) {}
-                                    EditableField("Last Name", student.lastName) {}
-                                    EditableField("Form", student.form) {}
-                                    EditableField("School", student.school) {}
-                                }
+                                ReadOnlyField("First Name", student.firstName)
+                                ReadOnlyField("Last Name", student.lastName)
+                                ReadOnlyField("Form", student.form)
+                                ReadOnlyField("School", student.school)
                             }
                         }
                     }
@@ -256,7 +194,7 @@ fun ParentProfileScreen(
 }
 
 @Composable
-fun EditableField(label: String, value: String, onEdit: () -> Unit) {
+fun EditableField(label: String, value: String, onEdit: (String) -> Unit) {
     var textState by remember { mutableStateOf(value) }
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
@@ -264,7 +202,7 @@ fun EditableField(label: String, value: String, onEdit: () -> Unit) {
             value = textState,
             onValueChange = {
                 textState = it
-                onEdit()
+                onEdit(it)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -280,17 +218,39 @@ fun EditableField(label: String, value: String, onEdit: () -> Unit) {
     }
 }
 
-@Preview
 @Composable
-fun ParentProfileScreenPreview() {
-    ParentProfileScreen(
-        onNavigateBack = {},
-        onLogout = {},
-        onNavigateToDashboard = {},
-        onNavigateToBusPickup = {},
-        onNavigateToChatPage = {},
-        onNavigateToPaymentConfirmation = {},
-        onNavigateToPayment = {},
-        onNavigateToTrackBus = {}
-    )
+fun ReadOnlyField(label: String, value: String) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+        TextField(
+            value = value,
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(8.dp),
+            readOnly = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor = Color.LightGray,
+                unfocusedIndicatorColor = Color.LightGray
+            )
+        )
+    }
 }
+
+data class ParentData(
+    val firstName: String = "",
+    val lastName: String = "",
+    val phoneNumber: String = "",
+    val email: String = ""
+)
+
+data class StudentProfile(
+    val parentId: String = "",
+    val firstName: String = "",
+    val lastName: String = "",
+    val form: String = "",
+    val school: String = ""
+)

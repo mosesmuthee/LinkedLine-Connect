@@ -301,7 +301,8 @@ fun UnifiedRegistrationScreen(
                                     phoneNumber = phoneNumber,
                                     password = password,
                                     confirmPassword = confirmPassword,
-                                    role = selectedRole
+                                    role = selectedRole,
+                                    age = age,
                                 )
                             },
                             modifier = Modifier.fillMaxWidth(),

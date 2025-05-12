@@ -1,36 +1,52 @@
 package com.moses.linkedlineconnect.ui.theme.Welcoming.SplashScreen
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.moses.linkedlineconnect.R // Correct import for your app's resources
+import androidx.navigation.NavHostController
+import com.moses.linkedlineconnect.R
+import com.moses.linkedlineconnect.navigation.ROUTE_WELCOMEPAGE
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onSplashFinished: () -> Unit) {
+fun SplashScreen(navController: NavHostController) {
     var showLogo by remember { mutableStateOf(true) }
     var showWelcomeText by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(2000) // Show logo for 2 seconds
         showLogo = false
-        delay(500) // Delay before showing welcome text
+        delay(250) // Delay before showing welcome text
         showWelcomeText = true
-        delay(2000) // Wait for animation to finish
-        onSplashFinished()
+        delay(2500) // Wait for animation to finish
+        navController.navigate(ROUTE_WELCOMEPAGE) // Navigate to the registration page
     }
 
     Box(
@@ -46,7 +62,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             exit = fadeOut(animationSpec = tween(1000))
         ) {
             Image(
-                painter = painterResource(id = R.drawable.moses), // Correct resource reference
+                painter = painterResource(id = R.drawable.linkedline), // Correct resource reference
                 contentDescription = "App Logo",
                 modifier = Modifier.size(150.dp)
             )
@@ -71,10 +87,18 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Powered by LinkedLine Connect",
+                    text = "Where we connect your child to their destiny",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Light,
                     color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Powered by Smiley Creatives",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Light,
+                    color = Color.Black,
                     textAlign = TextAlign.Center
                 )
             }
@@ -82,8 +106,8 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     }
 }
 
-@Preview
-@Composable
-fun SplashScreenPreview() {
-    SplashScreen(onSplashFinished = {})
-}
+//@Preview
+//@Composable
+//fun SplashScreenPreview() {
+//    SplashScreen(onSplashFinished = {})
+//}
