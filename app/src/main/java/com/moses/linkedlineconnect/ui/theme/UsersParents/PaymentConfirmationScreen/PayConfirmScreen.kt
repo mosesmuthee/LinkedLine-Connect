@@ -16,20 +16,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 
 @Composable
 fun PayConfirmDialog(
-    transactionId: String,
-    onDismiss: () -> Unit, // Callback to dismiss the dialog
-    onNavigateBack: () -> Unit // Callback to navigate back to the previous page
+    studentName: String,
+    schoolName: String,
+    navController: NavHostController,
+    onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         confirmButton = {
             Button(
                 onClick = {
-                    onDismiss() // Dismiss the dialog
-                    onNavigateBack() // Navigate back to the previous page
+                    onDismiss()
+                    navController.popBackStack() // This will take you back to the previous screen
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
             ) {
@@ -62,16 +64,16 @@ fun PayConfirmDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Transaction ID:",
+                    text = "Student: $studentName",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Gray
                 )
                 Text(
-                    text = transactionId,
+                    text = "School: $schoolName",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6200EE)
+                    color = Color.Gray
                 )
             }
         }

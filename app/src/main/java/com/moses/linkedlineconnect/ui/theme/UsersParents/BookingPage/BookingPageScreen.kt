@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -33,20 +35,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.moses.linkedlineconnect.navigation.ROUTE_PAYMENTSCREEN
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingPageScreen(
     navController: NavHostController,
     students: List<String>,
     schools: List<String>,
-    routes: List<String>,
-    onContinueToPayment: (String, String, String, String, String) -> Unit
+    routes: List<String>
 ) {
-    var selectedStudent by remember { mutableStateOf("") }
-    var selectedSchool by remember { mutableStateOf("") }
-    var selectedRoute by remember { mutableStateOf("") }
+    var studentName by remember { mutableStateOf("") }
+    var schoolName by remember { mutableStateOf("") }
+    var routeName by remember { mutableStateOf("") }
     var collectionPoint by remember { mutableStateOf("") }
     var tripType by remember { mutableStateOf("One-way") }
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
 
     Scaffold(
         content = { paddingValues ->
@@ -58,39 +63,34 @@ fun BookingPageScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Title
                 Text(
                     text = "Book a Trip",
                     fontSize = 24.sp,
-                    color = Color(0xFF6200EE),
+                    color = Color(0xFF001F54),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Dropdown: Select Student
-                DropdownField(
-                    label = "Select Student",
-                    options = students,
-                    selectedOption = selectedStudent,
-                    onOptionSelected = { selectedStudent = it }
+                TextField(
+                    value = studentName,
+                    onValueChange = { studentName = it },
+                    label = { Text("Student Name") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                // Dropdown: Select School
-                DropdownField(
-                    label = "Select School",
-                    options = schools,
-                    selectedOption = selectedSchool,
-                    onOptionSelected = { selectedSchool = it }
+                TextField(
+                    value = schoolName,
+                    onValueChange = { schoolName = it },
+                    label = { Text("School Name") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                // Dropdown: Select Route
-                DropdownField(
-                    label = "Select Route",
-                    options = routes,
-                    selectedOption = selectedRoute,
-                    onOptionSelected = { selectedRoute = it }
+                TextField(
+                    value = routeName,
+                    onValueChange = { routeName = it },
+                    label = { Text("Route") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                // Input: Collection/Drop-off Point
                 TextField(
                     value = collectionPoint,
                     onValueChange = { collectionPoint = it },
@@ -98,15 +98,14 @@ fun BookingPageScreen(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = Color.Black,
                         unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedIndicatorColor = Color(0xFF6200EE),
-                        unfocusedIndicatorColor = Color.Gray,
-                        cursorColor = Color(0xFF6200EE)
+                        focusedIndicatorColor = Color(0xFF001F54),
+                        unfocusedIndicatorColor = Color.Blue,
+                        cursorColor = Color(0xFF001F54)
                     )
                 )
 
-                // RadioButton: Trip Type
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -123,14 +122,14 @@ fun BookingPageScreen(
                         RadioButton(
                             selected = tripType == "One-way",
                             onClick = { tripType = "One-way" },
-                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF6200EE))
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF001F54))
                         )
                         Text(text = "One-way", fontSize = 14.sp)
 
                         RadioButton(
                             selected = tripType == "Round trip",
                             onClick = { tripType = "Round trip" },
-                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF6200EE))
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF001F54))
                         )
                         Text(text = "Round trip", fontSize = 14.sp)
                     }
@@ -138,22 +137,33 @@ fun BookingPageScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Continue to Payment Button
                 Button(
                     onClick = {
-                        onContinueToPayment(
-                            selectedStudent,
-                            selectedSchool,
-                            selectedRoute,
-                            collectionPoint,
-                            tripType
-                        )
+                        if (studentName.isBlank() || schoolName.isBlank() || routeName.isBlank() || collectionPoint.isBlank()) {
+                            dialogMessage = "Please fill all fields before continuing."
+                            showDialog = true
+                        } else {
+                            navController.navigate(ROUTE_PAYMENTSCREEN)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF001F54))
                 ) {
                     Text("Continue to Payment", fontSize = 16.sp, color = Color.White)
                 }
+            }
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    confirmButton = {
+                        Button(onClick = { showDialog = false }) {
+                            Text("OK")
+                        }
+                    },
+                    title = { Text("Incomplete Booking") },
+                    text = { Text(dialogMessage) }
+                )
             }
         }
     )
@@ -184,11 +194,11 @@ fun DropdownField(
                 readOnly = true,
                 label = { Text(label) },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
+                    focusedContainerColor = Color.Black,
                     unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedIndicatorColor = Color(0xFF6200EE),
+                    focusedIndicatorColor = Color.White,
                     unfocusedIndicatorColor = Color.Gray,
-                    cursorColor = Color(0xFF6200EE)
+                    cursorColor = Color(0xFF001F54)
                 )
             )
             DropdownMenu(
@@ -224,4 +234,3 @@ fun DropdownField(
 //        onContinueToPayment = { _, _, _, _, _ -> }
 //    )
 //}
-//

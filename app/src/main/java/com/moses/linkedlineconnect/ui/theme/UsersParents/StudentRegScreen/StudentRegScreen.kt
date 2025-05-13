@@ -2,65 +2,43 @@ package com.moses.linkedlineconnect.ui.theme.UsersParents.StudentRegScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.moses.linkedlineconnect.R
+import com.moses.linkedlineconnect.navigation.ROUTE_DASHBOARDParent
 
 @Composable
 fun StudentRegScreen(
-    navController: NavHostController // Use NavController for navigation
+    navController: NavHostController
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var admissionNumber by remember { mutableStateOf("") }
     var selectedSchool by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var studentClass by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var studentPhoto by remember { mutableIntStateOf(R.drawable.moses) }
+    var isCustomSchool by remember { mutableStateOf(false) } // Toggle between dropdown and manual input
     var termsAccepted by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Scaffold(
         content = { paddingValues ->
@@ -81,56 +59,6 @@ fun StudentRegScreen(
                     color = Color(0xFF6200EE),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
-
-                // Profile Picture and Add New Student Button
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Upload Student Photo
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clickable {
-                                // TODO: Implement photo upload logic
-                                studentPhoto = R.drawable.moses
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = studentPhoto),
-                            contentDescription = "Student Photo",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape)
-                        )
-                    }
-                    Text(
-                        text = "Upload Photo",
-                        fontSize = 14.sp,
-                        color = Color(0xFF6200EE),
-                        modifier = Modifier.clickable {
-                            // TODO: Implement photo upload logic
-                            studentPhoto = R.drawable.moses
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Add Another Student Button
-                    Button(
-                        onClick = { /* TODO: Add logic to add another student */ },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4))
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add Student")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Another Student", fontSize = 16.sp, color = Color.White)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
 
                 // Student Details Box
                 Card(
@@ -189,49 +117,116 @@ fun StudentRegScreen(
                             )
                         )
 
-                        // School Name Dropdown
-                        Box {
-                            TextField(
-                                value = selectedSchool,
-                                onValueChange = {},
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expanded = true },
-                                readOnly = true,
-                                label = { Text("Select School") },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFF5F5F5),
-                                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                                    focusedIndicatorColor = Color(0xFF6200EE),
-                                    unfocusedIndicatorColor = Color.Gray,
-                                    cursorColor = Color(0xFF6200EE)
-                                )
+                        // Email Input
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedIndicatorColor = Color(0xFF6200EE),
+                                unfocusedIndicatorColor = Color.Gray,
+                                cursorColor = Color(0xFF6200EE)
                             )
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                        )
+
+                        // Class Input
+                        TextField(
+                            value = studentClass,
+                            onValueChange = { studentClass = it },
+                            label = { Text("Class") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedIndicatorColor = Color(0xFF6200EE),
+                                unfocusedIndicatorColor = Color.Gray,
+                                cursorColor = Color(0xFF6200EE)
+                            )
+                        )
+
+                        // School Name Input or Dropdown
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("ABC High School") },
-                                    onClick = {
-                                        selectedSchool = "ABC High School"
-                                        expanded = false
-                                    }
+                                Checkbox(
+                                    checked = isCustomSchool,
+                                    onCheckedChange = { isCustomSchool = it },
+                                    colors = CheckboxDefaults.colors(checkedColor = Color(0xFF6200EE))
                                 )
-                                DropdownMenuItem(
-                                    text = { Text("XYZ Academy") },
-                                    onClick = {
-                                        selectedSchool = "XYZ Academy"
-                                        expanded = false
-                                    }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Enter school manually",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
                                 )
-                                DropdownMenuItem(
-                                    text = { Text("PQR International") },
-                                    onClick = {
-                                        selectedSchool = "PQR International"
-                                        expanded = false
-                                    }
+                            }
+
+                            if (isCustomSchool) {
+                                // Manual School Input
+                                TextField(
+                                    value = selectedSchool,
+                                    onValueChange = { selectedSchool = it },
+                                    label = { Text("School Name") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedIndicatorColor = Color(0xFF6200EE),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        cursorColor = Color(0xFF6200EE)
+                                    )
                                 )
+                            } else {
+                                // Dropdown for School Selection
+                                Box {
+                                    TextField(
+                                        value = selectedSchool,
+                                        onValueChange = {},
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { expanded = true },
+                                        readOnly = true,
+                                        label = { Text("Select School") },
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = Color(0xFFF5F5F5),
+                                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                                            focusedIndicatorColor = Color(0xFF6200EE),
+                                            unfocusedIndicatorColor = Color.Gray,
+                                            cursorColor = Color(0xFF6200EE)
+                                        )
+                                    )
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("ABC High School") },
+                                            onClick = {
+                                                selectedSchool = "ABC High School"
+                                                expanded = false
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("XYZ Academy") },
+                                            onClick = {
+                                                selectedSchool = "XYZ Academy"
+                                                expanded = false
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("PQR International") },
+                                            onClick = {
+                                                selectedSchool = "PQR International"
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -241,54 +236,69 @@ fun StudentRegScreen(
 
                 // Register Student Button
                 Button(
-                    onClick = { navController.navigate("dashboard") }, // Navigate back to the dashboard
+                    onClick = {
+                        saveStudentToDatabase(
+                            firstName = firstName,
+                            lastName = lastName,
+                            admissionNumber = admissionNumber,
+                            selectedSchool = selectedSchool,
+                            email = email,
+                            studentClass = studentClass,
+                            onSuccess = {
+                                navController.navigate(ROUTE_DASHBOARDParent) // Navigate back to the dashboard
+                            },
+                            onFailure = {
+                                // Handle failure (e.g., show a toast)
+                            }
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
                 ) {
-                    Text("Register Student", fontSize = 18.sp, color = Color.White)
+                    if (isSaving) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                    } else {
+                        Text("Register Student", fontSize = 18.sp, color = Color.White)
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Terms and Conditions Checkbox
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Checkbox(
-                        checked = termsAccepted,
-                        onCheckedChange = { termsAccepted = it },
-                        colors = CheckboxDefaults.colors(checkedColor = Color(0xFF6200EE))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "I agree to the terms and conditions",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Login Text
-                Text(
-                    text = "Already registered? Login here",
-                    fontSize = 16.sp,
-                    color = Color(0xFF6200EE),
-                    modifier = Modifier.clickable { navController.navigate("login") }, // Navigate to the login screen
-                    textAlign = TextAlign.Center
-                )
             }
         }
     )
 }
 
-//@Preview
-//@Composable
-//fun StudentRegScreenPreview() {
-//    StudentRegScreen(
-//        navController = rememberNavController()
-//    )
-//}
+fun saveStudentToDatabase(
+    firstName: String,
+    lastName: String,
+    admissionNumber: String,
+    selectedSchool: String,
+    email: String,
+    studentClass: String,
+    onSuccess: () -> Unit,
+    onFailure: () -> Unit
+) {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    if (userId == null) {
+        onFailure()
+        return
+    }
+
+    val studentData = mapOf(
+        "firstName" to firstName,
+        "lastName" to lastName,
+        "admissionNumber" to admissionNumber,
+        "school" to selectedSchool,
+        "email" to email,
+        "class" to studentClass
+    )
+
+    val databaseRef = FirebaseDatabase.getInstance().getReference("Users/$userId/Students")
+    databaseRef.push().setValue(studentData).addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            onSuccess()
+        } else {
+            onFailure()
+        }
+    }
+}
 

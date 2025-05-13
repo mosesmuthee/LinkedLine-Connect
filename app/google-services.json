@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "978207197323",
+    "firebase_url": "https://linkedline-connect-default-rtdb.firebaseio.com",
     "project_id": "linkedline-connect",
     "storage_bucket": "linkedline-connect.firebasestorage.app"
   },

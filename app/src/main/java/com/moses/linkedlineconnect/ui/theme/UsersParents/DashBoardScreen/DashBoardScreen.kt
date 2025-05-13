@@ -6,22 +6,27 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -44,34 +53,58 @@ import com.moses.linkedlineconnect.navigation.ROUTE_CHATPAGE
 import com.moses.linkedlineconnect.navigation.ROUTE_PARENTPROFILE
 import com.moses.linkedlineconnect.navigation.ROUTE_STUDENTREG
 
+private val NavyBlue = Color(0xFF001F54)
+private val NavyBlueDark = Color(0xFF001233)
+private val White = Color(0xFFFFFFFF)
+private val Black = Color(0xFF111111)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashBoardScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                title = { Text("Dashboard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = White) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
-                    titleContentColor = Color.White
+                    containerColor = NavyBlue,
+                    titleContentColor = White
                 ),
                 actions = {
-                    IconButton(onClick = { /* TODO: Open Drawer */ }) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color.White)
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = White)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Logout", color = Color.Red) },
+                                onClick = {
+                                    showMenu = false
+                                    authViewModel.logout()
+                                    navController.navigate(com.moses.linkedlineconnect.navigation.ROUTE_LOGINParent) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             )
         },
         content = { paddingValues ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFF6200EE), Color(0xFF03A9F4))
+                            colors = listOf(NavyBlue, NavyBlueDark)
                         )
                     )
                     .padding(paddingValues)
@@ -80,85 +113,123 @@ fun DashBoardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Card: Your Students
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.elevatedCardElevation(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB))
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .clickable { navController.navigate(ROUTE_PARENTPROFILE) },
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.elevatedCardElevation(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = White)
                     ) {
-                        Text(
-                            text = "Your Students",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0D47A1)
-                        )
-                    }
-                }
-
-                // Buttons inside gradient cards
-                GradientCard(
-                    gradientColors = listOf(Color(0xFF6200EE), Color(0xFF03A9F4)),
-                    onClick = { navController.navigate(ROUTE_BOOKINGPAGE) }
-                ) {
-                    Icon(Icons.Filled.AddCircle, contentDescription = "Make a Booking", tint = Color.White)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Make a Booking", fontSize = 18.sp, color = Color.White)
-                }
-
-                GradientCard(
-                    gradientColors = listOf(Color(0xFF4CAF50), Color(0xFF8BC34A)),
-                    onClick = { navController.navigate(ROUTE_CHATPAGE) }
-                ) {
-                    Icon(Icons.Filled.MailOutline, contentDescription = "Chat Room", tint = Color.White)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Chat Room", fontSize = 18.sp, color = Color.White)
-                }
-
-                GradientCard(
-                    gradientColors = listOf(Color(0xFFFF9800), Color(0xFFFFC107)),
-                    onClick = { navController.navigate(ROUTE_PARENTPROFILE) }
-                ) {
-                    Icon(Icons.Filled.Person, contentDescription = "Profile", tint = Color.White)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Profile", fontSize = 18.sp, color = Color.White)
-                }
-
-                // Add Student Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .clickable { navController.navigate(ROUTE_STUDENTREG) },
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.elevatedCardElevation(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF6200EE))
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add Student", tint = Color.White)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Add Student", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Your Students",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NavyBlue
+                            )
+                            if (authViewModel.studentList.isEmpty()) {
+                                Text(
+                                    text = "No students registered yet",
+                                    fontSize = 14.sp,
+                                    color = Black
+                                )
+                            } else {
+                                authViewModel.studentList.take(2).forEach { student ->
+                                    Text(
+                                        text = student.name,
+                                        fontSize = 16.sp,
+                                        color = NavyBlue
+                                    )
+                                    Text(
+                                        text = student.admissionNumber,
+                                        fontSize = 14.sp,
+                                        color = Black
+                                    )
+                                }
+                                if (authViewModel.studentList.size > 2) {
+                                    Text(
+                                        text = "View all...",
+                                        fontSize = 14.sp,
+                                        color = NavyBlue,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
 
-                GradientCard(
-                    gradientColors = listOf(Color(0xFFFF5252), Color(0xFFFF1744)),
-                    onClick = { authViewModel.logout() }
-                ) {
-                    Text("Logout", fontSize = 16.sp, color = Color.White)
+                // Booking Button
+                item {
+                    DashboardButton(
+                        text = "Make a Booking",
+                        icon = Icons.Filled.AddCircle,
+                        onClick = { navController.navigate(ROUTE_BOOKINGPAGE) }
+                    )
+                }
+
+                // Chat Button
+                item {
+                    DashboardButton(
+                        text = "Chat Room",
+                        icon = Icons.Filled.MailOutline,
+                        onClick = { navController.navigate(ROUTE_CHATPAGE) }
+                    )
+                }
+
+                // Profile Button
+                item {
+                    DashboardButton(
+                        text = "Profile",
+                        icon = Icons.Filled.Person,
+                        onClick = { navController.navigate(ROUTE_PARENTPROFILE) }
+                    )
+                }
+
+                // Add Student Card
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .clickable { navController.navigate(ROUTE_STUDENTREG) },
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.elevatedCardElevation(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = NavyBlue)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = "Add Student", tint = White)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Add Student", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                // Logout Button
+                item {
+                    DashboardButton(
+                        text = "Logout",
+                        icon = Icons.Filled.ExitToApp,
+                        onClick = { authViewModel.logout() },
+                        backgroundColor = Black,
+                        contentColor = White
+                    )
                 }
             }
         }
@@ -166,34 +237,23 @@ fun DashBoardScreen(
 }
 
 @Composable
-fun GradientCard(
-    gradientColors: List<Color>,
+fun DashboardButton(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
-    content: @Composable RowScope.() -> Unit
+    backgroundColor: Color = NavyBlue,
+    contentColor: Color = White
 ) {
-    Card(
+    Button(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp)
-            .clickable { onClick() },
+            .height(70.dp),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(colors = gradientColors)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                content = content
-            )
-        }
+        Icon(icon, contentDescription = text, tint = contentColor)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text, fontSize = 18.sp, color = contentColor, fontWeight = FontWeight.Bold)
     }
 }

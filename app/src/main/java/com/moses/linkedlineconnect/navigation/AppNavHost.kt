@@ -9,15 +9,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.moses.linkedlineconnect.data.AuthViewModel
+import com.moses.linkedlineconnect.ui.theme.AdminScreens.AdminChatPage.AdminChatScreen
 import com.moses.linkedlineconnect.ui.theme.AdminScreens.AdminDashboard.AdminDashboardScreen
 import com.moses.linkedlineconnect.ui.theme.BusPickupScreen.BusPickupDialog
 import com.moses.linkedlineconnect.ui.theme.EscortDashboard.EscortDashboardScreen
-import com.moses.linkedlineconnect.ui.theme.EscortRegPage.EscortRegScreen
-import com.moses.linkedlineconnect.ui.theme.Escorts.EscortLoginPage.EscortLoginScreen
 import com.moses.linkedlineconnect.ui.theme.PaymentConfirmationScreen.PayConfirmDialog
 import com.moses.linkedlineconnect.ui.theme.PaymentScreen.MpesaPaymentScreen
 import com.moses.linkedlineconnect.ui.theme.Registration.UnifiedRegistrationScreen
@@ -27,6 +28,7 @@ import com.moses.linkedlineconnect.ui.theme.UsersParents.DashBoardScreen.DashBoa
 import com.moses.linkedlineconnect.ui.theme.UsersParents.LoginScreen.LoginScreen
 import com.moses.linkedlineconnect.ui.theme.UsersParents.ParentProfile.ParentProfileScreen
 import com.moses.linkedlineconnect.ui.theme.UsersParents.StudentDetailsPage.StudentDetailsPageScreen
+import com.moses.linkedlineconnect.ui.theme.UsersParents.StudentRegScreen.StudentRegScreen
 import com.moses.linkedlineconnect.ui.theme.Welcoming.SplashScreen.SplashScreen
 import com.moses.linkedlineconnect.viewmodel.AppViewModel
 
@@ -53,7 +55,7 @@ fun AppNavHost(
     NavHost(
         navController = navController,
         modifier = modifier,
-        startDestination = startDestination
+        startDestination = startDestination,
     ) {
         composable(ROUTE_WELCOMEPAGE) {
             UnifiedRegistrationScreen(
@@ -81,11 +83,10 @@ composable(ROUTE_SPLASHSCREEN){
 }
         composable(ROUTE_BOOKINGPAGE) {
             BookingPageScreen(
-                navController = TODO(),
-                students = TODO(),
-                schools = TODO(),
-                routes = TODO(),
-                onContinueToPayment = TODO()
+                navController = navController,
+                students = students.value,
+                schools = schools.value,
+                routes = routes.value
             )
         }
         
@@ -109,11 +110,14 @@ composable(ROUTE_SPLASHSCREEN){
         }
         composable (ROUTE_PAYMENTSCREEN){
             MpesaPaymentScreen(
-                studentId = "studentId", // Replace with actual student ID
-                onPay = { paymentDetails ->
-                    // Handle payment logic here
-                }
-            )
+                navController.toString(),
+                navController = navController,
+                authViewModel = authViewModel)
+//                studentId = "studentId", // Replace with actual student ID
+//                onPay = { paymentDetails ->
+//                    // Handle payment logic here
+//                }
+//            )
         }
         composable(ROUTE_PARENTPROFILE) {
             ParentProfileScreen(
@@ -129,24 +133,33 @@ composable(ROUTE_SPLASHSCREEN){
 //                parentId = TODO()
             )
         }
-        composable (ROUTE_PAYMENTCONFIRMATION){
+        composable(
+            route = "$ROUTE_PAYMENTCONFIRMATION/{studentName}/{schoolName}",
+            arguments = listOf(
+                navArgument("studentName") { type = NavType.StringType },
+                navArgument("schoolName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val studentName = backStackEntry.arguments?.getString("studentName") ?: ""
+            val schoolName = backStackEntry.arguments?.getString("schoolName") ?: ""
             PayConfirmDialog(
-                transactionId = "transactionId", // Replace with actual transaction ID
-                onDismiss = { /* Handle dismiss */ },
-                onNavigateBack = TODO()
+                studentName = studentName,
+                schoolName = schoolName,
+                onDismiss = { /* handle dismiss */ },
+                navController = navController
             )
         }
-        composable (ROUTE_ESCORTLOGIN){
-            EscortLoginScreen(
-                navController = navController,
-                onLogin = { email, password ->
-                    // Handle login logic here
-                },
-                onNavigateToWelcome = {
-                    // Handle navigation to the welcoming page
-                }
-            )
-        }
+//        composable (ROUTE_ESCORTLOGIN){
+//            EscortLoginScreen(
+//                navController = navController,
+//                onLogin = { email, password ->
+//                    // Handle login logic here
+//                },
+//                onNavigateToWelcome = {
+//                    // Handle navigation to the welcoming page
+//                }
+//            )
+//        }
         composable (ROUTE_LOGINParent){
             LoginScreen(
                 navController = navController,
@@ -154,14 +167,14 @@ composable(ROUTE_SPLASHSCREEN){
                 onForgotPassword = { /* Handle forgot password */ }
             )
         }
-        composable (ROUTE_ESCORTREGISTER){
-            EscortRegScreen(
-                onRegister = { escort ->
-                    // Handle registration logic here
-                },
-                onNavigateBack = { /* Handle navigation back */ }
-            )
-        }
+//        composable (ROUTE_ESCORTREGISTER){
+//            EscortRegScreen(
+//                onRegister = { escort ->
+//                    // Handle registration logic here
+//                },
+//                onNavigateBack = { /* Handle navigation back */ }
+//            )
+//        }
 
         composable(ROUTE_DASHBOARDParent) {
             DashBoardScreen(
@@ -181,9 +194,14 @@ composable(ROUTE_SPLASHSCREEN){
         }
         composable (ROUTE_DASHBOARDEscort){
             EscortDashboardScreen(
-                onSendNotification = { /* Handle send notification */ },
-                navController = navController
+                navController = navController,
+                authviewModel = authViewModel,
+                onSendNotification = { message ->
+                    // Handle the notification logic here
+                    println("Notification sent: $message")
+                }
             )
+
         }
         composable(ROUTE_ADMIN_DASHBOARD) {
               AdminDashboardScreen(
@@ -191,9 +209,12 @@ composable(ROUTE_SPLASHSCREEN){
                   authViewModel = authViewModel
               )
         }
-//        composable (ROUTE_STUDENTREG){
-//            StudentRegScreen()
-//        }
+        composable (ROUTE_STUDENTREG){
+            StudentRegScreen(navController)
+        }
+        composable (ROUTE_ADMINCHATPAGE){
+            AdminChatScreen(navController)
+        }
 
         }
 

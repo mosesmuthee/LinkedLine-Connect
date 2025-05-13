@@ -1,15 +1,13 @@
-package com.moses.linkedlineconnect.model
+package com.moses.linkedlineconnect.payment
 
-data class StkPushRequest(
-    val BusinessShortCode: String,
-    val Password: String,
-    val Timestamp: String,
-    val TransactionType: String = "CustomerPayBillOnline",
-    val Amount: String,
-    val PartyA: String,
-    val PartyB: String,
-    val PhoneNumber: String,
-    val CallBackURL: String,
-    val AccountReference: String,
-    val TransactionDesc: String
-)
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.moses.linkedlineconnect.api.MpesaApi
+import okhttp3.Response
+
+object Mpesa {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun processPayment(phoneNumber: String, amount: Int, transactionDesc: String): Response {
+        return MpesaApi.initiateStkPush(phoneNumber, amount, transactionDesc)
+    }
+}

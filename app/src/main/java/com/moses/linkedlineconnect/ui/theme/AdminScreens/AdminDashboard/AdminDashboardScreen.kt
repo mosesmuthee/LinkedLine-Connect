@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.firebase.firestore.FirebaseFirestore
 import com.moses.linkedlineconnect.data.AuthViewModel
+import com.moses.linkedlineconnect.navigation.ROUTE_ADMINCHATPAGE
 import com.moses.linkedlineconnect.navigation.ROUTE_LOGINParent
 import kotlinx.coroutines.launch
 
@@ -153,6 +154,12 @@ fun AdminDashboardScreen(
                             DashboardButton(
                                 text = "Send Announcement",
                                 onClick = { showPopup { SendAnnouncementPopup(db) } }
+                            )
+                        }
+                        item {
+                            DashboardButton(
+                                text = "Admin Chat",
+                                onClick = { navController.navigate(ROUTE_ADMINCHATPAGE) } // Navigate to Admin Chat Page
                             )
                         }
                         item {

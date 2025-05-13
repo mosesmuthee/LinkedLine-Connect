@@ -30,6 +30,7 @@ firebaseStorage = "21.0.1"
 playServicesMaps = "19.2.0"
 retrofit = "2.9.0"
 firebaseInappmessagingDisplay = "21.0.2"
+firebaseMessaging = "24.1.1"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -68,6 +69,7 @@ play-services-maps = { module = "com.google.android.gms:play-services-maps", ver
 play-services-maps-v1810 = { module = "com.google.android.gms:play-services-maps", version.ref = "googlePlayServicesMaps" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-inappmessaging-display = { group = "com.google.firebase", name = "firebase-inappmessaging-display", version.ref = "firebaseInappmessagingDisplay" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

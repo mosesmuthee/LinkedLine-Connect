@@ -5,33 +5,35 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,340 +45,253 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.moses.linkedlineconnect.R
-import com.moses.linkedlineconnect.navigation.ROUTE_BUSPICKUP
-import com.moses.linkedlineconnect.navigation.ROUTE_CHATPAGE
 import com.moses.linkedlineconnect.navigation.ROUTE_DASHBOARDParent
-import com.moses.linkedlineconnect.navigation.ROUTE_PAYMENTCONFIRMATION
-import com.moses.linkedlineconnect.navigation.ROUTE_PAYMENTSCREEN
-import kotlinx.coroutines.launch
-
+import com.moses.linkedlineconnect.navigation.ROUTE_LOGINParent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParentProfileScreen(
-    navController:NavController,
-//    parentId: String
-//    parentId: String, // Pass the parent ID to fetch data
-//    onNavigateBack: () -> Unit,
-//    onLogout: () -> Unit,
-//    onNavigateToDashboard: () -> Unit,
-//    onNavigateToBusPickup: () -> Unit,
-//    onNavigateToChatPage: () -> Unit,
-//    onNavigateToPaymentConfirmation: () -> Unit,
-//    onNavigateToPayment: () -> Unit,
-//    onNavigateToTrackBus: () -> Unit
+    navController: NavController
 ) {
-    val db = FirebaseFirestore.getInstance()
-//    var parentId = String()
-    var parentData by remember { mutableStateOf<ParentData?>(null) }
-    var studentsData by remember { mutableStateOf<List<StudentProfile>>(emptyList()) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
+    // Parent fields
+    var parentFirstName by remember { mutableStateOf("") }
+    var parentLastName by remember { mutableStateOf("") }
+    var parentEmail by remember { mutableStateOf("") }
+    var parentPhone by remember { mutableStateOf("") }
+    var parentImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Fetch parent and student data from the database
-//    LaunchedEffect(parentId) {
-//        db.collection("parents").document(parentId).get().addOnSuccessListener { document ->
-//            if (document.exists()) {
-//                parentData = document.toObject(ParentData::class.java)
-//            }
-//        }
-//        db.collection("students").whereEqualTo("parentId", parentId).get().addOnSuccessListener { querySnapshot ->
-//            studentsData = querySnapshot.documents.mapNotNull { it.toObject(StudentProfile::class.java) }
-//        }
-//    }
+    // Student fields
+    var studentFirstName by remember { mutableStateOf("") }
+    var studentLastName by remember { mutableStateOf("") }
+    var studentImageUri by remember { mutableStateOf<Uri?>(null) }
+    var studentAdmissionNumber by remember { mutableStateOf("") }
+    var studentClass by remember { mutableStateOf("") }
+    var studentSchool by remember { mutableStateOf("") }
 
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    val parentImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        parentImageUri = uri
+    }
+    val studentImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        studentImageUri = uri
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        text = "Navigation",
+                        text = "Profile",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF6200EE)
+                        color = Color.White
                     )
-                    HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
-                    Text("Home Dashboard", fontSize = 16.sp, modifier = Modifier.clickable { navController.navigate(
-                        ROUTE_DASHBOARDParent
-                    ) })
-                    Text("Bus Pickup Screen", fontSize = 16.sp, modifier = Modifier.clickable {navController.navigate(
-                        ROUTE_BUSPICKUP
-                    ) })
-                    Text("Chat Page Screen", fontSize = 16.sp, modifier = Modifier.clickable { navController.navigate(
-                        ROUTE_CHATPAGE
-                    ) })
-                    Text("Payment Confirmation Screen", fontSize = 16.sp, modifier = Modifier.clickable { navController.navigate(
-                        ROUTE_PAYMENTCONFIRMATION
-                    ) })
-                    Text("Payment Screen", fontSize = 16.sp, modifier = Modifier.clickable { navController.navigate(
-                        ROUTE_PAYMENTSCREEN
-                    ) })
-//                    Text("Track Bus Screen", fontSize = 16.sp, modifier = Modifier.clickable { onNavigateToTrackBus() })
-                }
-            }
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "LinkedLine Connect",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            coroutineScope.launch { drawerState.open() }
-                        }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color.White)
-                        }
-                        Text(
-                            text = "Log Out",
-                            fontSize = 16.sp,
-                            color = Color.White,
-                            modifier = Modifier
-                                .padding(end = 16.dp)
-//                                .clickable { onLogout() }
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF6200EE),
-                        titleContentColor = Color.White
-                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF6200EE),
+                    titleContentColor = Color.White
                 )
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            content = { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        // Parent Details Section
-                        Text(
-                            text = "Parent Details",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6200EE)
-                        )
-                        parentData?.let { parent ->
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Parent Image
-                                var parentImageUri by remember { mutableStateOf<Uri?>(null) }
-                                val parentImagePickerLauncher = rememberLauncherForActivityResult(
-                                    contract = ActivityResultContracts.GetContent()
-                                ) { uri: Uri? ->
-                                    parentImageUri = uri
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape)
-                                        .clickable { parentImagePickerLauncher.launch("image/*") },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (parentImageUri != null) {
-                                        Image(
-                                            painter = rememberAsyncImagePainter(parentImageUri),
-                                            contentDescription = "Parent Image",
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clip(CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.moses), // Replace with a placeholder image
-                                            contentDescription = "Parent Placeholder",
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clip(CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                }
-
-                                EditableField("First Name", parent.firstName) { newValue ->
-                                    parentData = parent.copy(firstName = newValue)
-                                }
-                                EditableField("Last Name", parent.lastName) { newValue ->
-                                    parentData = parent.copy(lastName = newValue)
-                                }
-                                EditableField("Phone Number", parent.phoneNumber) { newValue ->
-                                    parentData = parent.copy(phoneNumber = newValue)
-                                }
-                                EditableField("Email", parent.email) { newValue ->
-                                    parentData = parent.copy(email = newValue)
-                                }
-                            }
-                        }
-
-                        // Students Details Section
-                        Text(
-                            text = "Students Details",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6200EE)
-                        )
-                        studentsData.forEach { student ->
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Student Image
-                                var studentImageUri by remember { mutableStateOf<Uri?>(null) }
-                                val studentImagePickerLauncher = rememberLauncherForActivityResult(
-                                    contract = ActivityResultContracts.GetContent()
-                                ) { uri: Uri? ->
-                                    studentImageUri = uri
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape)
-                                        .clickable { studentImagePickerLauncher.launch("image/*") },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (studentImageUri != null) {
-                                        Image(
-                                            painter = rememberImagePainter(studentImageUri),
-                                            contentDescription = "Student Image",
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clip(CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.moses), // Replace with a placeholder image
-                                            contentDescription = "Student Placeholder",
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clip(CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                }
-
-                                EditableField("First Name", student.firstName) { newValue ->
-                                    studentsData = studentsData.toMutableList().apply {
-                                        this[studentsData.indexOf(student)] = student.copy(firstName = newValue)
-                                    }
-                                }
-                                EditableField("Last Name", student.lastName) { newValue ->
-                                    studentsData = studentsData.toMutableList().apply {
-                                        this[studentsData.indexOf(student)] = student.copy(lastName = newValue)
-                                    }
-                                }
-                                EditableField("Form", student.form) { newValue ->
-                                    studentsData = studentsData.toMutableList().apply {
-                                        this[studentsData.indexOf(student)] = student.copy(form = newValue)
-                                    }
-                                }
-                                EditableField("School", student.school) { newValue ->
-                                    studentsData = studentsData.toMutableList().apply {
-                                        this[studentsData.indexOf(student)] = student.copy(school = newValue)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Save Button
-                        Button(
-                            onClick = {
-                                // Save parent and student data to the database
-//                                db.collection("parents").document(parentId).set(parentData)
-//                                    .addOnSuccessListener {
-//                                        snackbarHostState.showSnackbar("Parent data updated successfully")
-//                                    }
-//                                    .addOnFailureListener { e ->
-//                                        snackbarHostState.showSnackbar("Error updating parent data: ${e.message}")
-//                                    }
-//
-//                                studentsData.forEach { student ->
-//                                    db.collection("students").document(student.id).set(student)
-//                                        .addOnSuccessListener {
-//                                            snackbarHostState.showSnackbar("Student data updated successfully")
-//                                        }
-//                                        .addOnFailureListener { e ->
-//                                            snackbarHostState.showSnackbar("Error updating student data: ${e.message}")
-//                                        }
-//                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
-                        ) {
-                            Text("Save", fontSize = 16.sp, color = Color.White)
+            )
+            // Dropdown Menu
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Dashboard") },
+                    onClick = {
+                        showMenu = false
+                        navController.navigate(ROUTE_DASHBOARDParent)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Logout", color = Color.Red) },
+                    onClick = {
+                        showMenu = false
+                        FirebaseAuth.getInstance().signOut()
+                        navController.navigate(ROUTE_LOGINParent) {
+                            popUpTo(0) { inclusive = true }
                         }
                     }
+                )
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Parent Section
+            Text("Parent Details", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6200EE))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .clickable { parentImagePickerLauncher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (parentImageUri != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(parentImageUri),
+                        contentDescription = "Parent Image",
+                        modifier = Modifier.size(100.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.moses),
+                        contentDescription = "Parent Placeholder",
+                        modifier = Modifier.size(100.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
-        )
-    }
-}
-
-@Composable
-fun EditableField(label: String, value: String, onEdit: (String) -> Unit) {
-    var textState by remember { mutableStateOf(value) }
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-        TextField(
-            value = textState,
-            onValueChange = {
-                textState = it
-                onEdit(it)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                unfocusedIndicatorColor = Color.LightGray
+            OutlinedTextField(
+                value = parentFirstName,
+                onValueChange = { parentFirstName = it },
+                label = { Text("First Name") },
+                modifier = Modifier.fillMaxWidth()
             )
-        )
+            OutlinedTextField(
+                value = parentLastName,
+                onValueChange = { parentLastName = it },
+                label = { Text("Last Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = parentEmail,
+                onValueChange = { parentEmail = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = parentPhone,
+                onValueChange = { parentPhone = it },
+                label = { Text("Phone Number") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Student Section
+            Text("Student Details", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6200EE))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .clickable { studentImagePickerLauncher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (studentImageUri != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(studentImageUri),
+                        contentDescription = "Student Image",
+                        modifier = Modifier.size(100.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.moses),
+                        contentDescription = "Student Placeholder",
+                        modifier = Modifier.size(100.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            OutlinedTextField(
+                value = studentFirstName,
+                onValueChange = { studentFirstName = it },
+                label = { Text("First Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = studentLastName,
+                onValueChange = { studentLastName = it },
+                label = { Text("Last Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = studentAdmissionNumber,
+                onValueChange = { studentAdmissionNumber = it },
+                label = { Text("Admission Number") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = studentClass,
+                onValueChange = { studentClass = it },
+                label = { Text("Class") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = studentSchool,
+                onValueChange = { studentSchool = it },
+                label = { Text("School") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Save Button
+            Button(
+                onClick = {
+                    saveParentAndStudentToDatabase(
+                        parentFirstName, parentLastName, parentEmail, parentPhone,
+                        studentFirstName, studentLastName, studentAdmissionNumber, studentClass, studentSchool
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+            ) {
+                Text("Save", fontSize = 16.sp, color = Color.White)
+            }
+        }
     }
 }
 
-data class ParentData(
-    val firstName: String = "",
-    val lastName: String = "",
-    val phoneNumber: String = "",
-    val email: String = ""
-)
+// Save logic to Firebase Realtime Database
+fun saveParentAndStudentToDatabase(
+    parentFirstName: String,
+    parentLastName: String,
+    parentEmail: String,
+    parentPhone: String,
+    studentFirstName: String,
+    studentLastName: String,
+    studentAdmissionNumber: String,
+    studentClass: String,
+    studentSchool: String
+) {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val db = FirebaseDatabase.getInstance().reference
 
-data class StudentProfile(
-    val firstName: String = "",
-    val lastName: String = "",
-    val form: String = "",
-    val school: String = ""
-)
+    // Save parent
+    val parentData = mapOf(
+        "firstName" to parentFirstName,
+        "lastName" to parentLastName,
+        "email" to parentEmail,
+        "phone" to parentPhone
+    )
+    db.child("Users").child(userId).child("Profile").setValue(parentData)
+
+    // Save student
+    val studentData = mapOf(
+        "firstName" to studentFirstName,
+        "lastName" to studentLastName,
+        "admissionNumber" to studentAdmissionNumber,
+        "class" to studentClass,
+        "school" to studentSchool
+    )
+    db.child("Users").child(userId).child("Students").push().setValue(studentData)
+}

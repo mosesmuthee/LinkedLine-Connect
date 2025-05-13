@@ -84,6 +84,7 @@ dependencies {
         // Other dependencies like appcompat, material, etc.
     implementation (libs.androidx.appcompat.v161)
     implementation(libs.firebase.inappmessaging.display)
+    implementation(libs.firebase.messaging)
 
 
 

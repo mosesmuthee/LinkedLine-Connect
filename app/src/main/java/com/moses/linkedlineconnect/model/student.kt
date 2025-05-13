@@ -7,3 +7,4 @@ data class student (
     val school : String = "",
 
     )
+

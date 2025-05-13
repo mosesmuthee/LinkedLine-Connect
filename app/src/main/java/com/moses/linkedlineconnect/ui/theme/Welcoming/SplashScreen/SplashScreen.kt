@@ -45,7 +45,7 @@ fun SplashScreen(navController: NavHostController) {
         showLogo = false
         delay(250) // Delay before showing welcome text
         showWelcomeText = true
-        delay(2500) // Wait for animation to finish
+        delay(1000) // Wait for animation to finish
         navController.navigate(ROUTE_WELCOMEPAGE) // Navigate to the registration page
     }
 
