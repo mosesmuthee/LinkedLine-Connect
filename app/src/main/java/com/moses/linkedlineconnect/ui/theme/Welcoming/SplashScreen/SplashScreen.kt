@@ -62,7 +62,7 @@ fun SplashScreen(navController: NavHostController) {
             exit = fadeOut(animationSpec = tween(1000))
         ) {
             Image(
-                painter = painterResource(id = R.drawable.linkedline), // Correct resource reference
+                painter = painterResource(id = R.drawable.icon), // Correct resource reference
                 contentDescription = "App Logo",
                 modifier = Modifier.size(150.dp)
             )

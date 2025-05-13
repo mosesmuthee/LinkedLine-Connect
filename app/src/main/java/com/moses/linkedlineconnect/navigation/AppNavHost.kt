@@ -132,7 +132,8 @@ composable(ROUTE_SPLASHSCREEN){
         composable (ROUTE_PAYMENTCONFIRMATION){
             PayConfirmDialog(
                 transactionId = "transactionId", // Replace with actual transaction ID
-                onDismiss = { /* Handle dismiss */ }
+                onDismiss = { /* Handle dismiss */ },
+                onNavigateBack = TODO()
             )
         }
         composable (ROUTE_ESCORTLOGIN){
@@ -180,14 +181,20 @@ composable(ROUTE_SPLASHSCREEN){
         }
         composable (ROUTE_DASHBOARDEscort){
             EscortDashboardScreen(
-                onNavigateToChat = { /* Handle navigation to chat */ },
                 onSendNotification = { /* Handle send notification */ },
-                navController = TODO()
+                navController = navController
             )
         }
         composable(ROUTE_ADMIN_DASHBOARD) {
-              AdminDashboardScreen()
+              AdminDashboardScreen(
+                  navController = navController,
+                  authViewModel = authViewModel
+              )
         }
+//        composable (ROUTE_STUDENTREG){
+//            StudentRegScreen()
+//        }
+
         }
 
     }

@@ -132,14 +132,14 @@ fun MpesaPaymentScreen(
     )
 }
 
-@Preview
-@Composable
-fun MpesaPaymentScreenPreview() {
-    MpesaPaymentScreen(
-        studentId = "sampleStudentId",
-        onPay = { phoneNumber ->
-            // Handle payment logic here
-        }
-    )
-}
+//@Preview
+//@Composable
+//fun MpesaPaymentScreenPreview() {
+//    MpesaPaymentScreen(
+//        studentId = "sampleStudentId",
+//        onPay = { phoneNumber ->
+//            // Handle payment logic here
+//        }
+//    )
+//}
 

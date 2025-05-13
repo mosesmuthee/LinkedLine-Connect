@@ -1,26 +1,36 @@
 package com.moses.linkedlineconnect.ui.theme.PaymentConfirmationScreen
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun PayConfirmDialog(
     transactionId: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit, // Callback to dismiss the dialog
+    onNavigateBack: () -> Unit // Callback to navigate back to the previous page
 ) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         confirmButton = {
             Button(
-                onClick = { onDismiss() },
+                onClick = {
+                    onDismiss() // Dismiss the dialog
+                    onNavigateBack() // Navigate back to the previous page
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
             ) {
                 Text("OK", color = Color.White)
@@ -68,12 +78,12 @@ fun PayConfirmDialog(
     )
 }
 
-@Preview
-@Composable
-fun PayConfirmDialogPreview() {
-    PayConfirmDialog(
-        transactionId = "TXN123456789",
-        onDismiss = {}
-    )
-}
+//@Preview
+//@Composable
+//fun PayConfirmDialogPreview() {
+//    PayConfirmDialog(
+//        transactionId = "TXN123456789",
+//        onDismiss = {}
+//    )
+//}
 
